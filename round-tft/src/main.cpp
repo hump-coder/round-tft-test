@@ -389,9 +389,9 @@ static void runTempArcClock() {
   char buf[16];
   canvas.setTextDatum(MC_DATUM);
   canvas.setTextColor(tColor, TFT_BLACK);
-  canvas.setTextSize(2);
+  canvas.setTextSize(3);
   snprintf(buf, sizeof(buf), "%.1fC", temp.temperature);
-  int y = CENTER - r + r / 2;
+  int y = (CENTER - r + r / 2) + 10; // kARL added the +10 to lower the text a bit.
   canvas.drawString(buf, CENTER, y);
   canvas.setTextSize(1);
 
