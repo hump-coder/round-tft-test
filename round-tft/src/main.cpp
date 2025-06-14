@@ -3,6 +3,8 @@
 #include <math.h>
 #include <Wire.h>
 #include <Adafruit_AHTX0.h>
+#include <WiFi.h>
+#include <time.h>
 
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_GC9A01 _panel;  // display driver class
@@ -55,11 +57,16 @@ enum DemoMode {
   DEMO_PLASMA,
   DEMO_ARC_CLOCK,
   DEMO_ARC_ANALOG_CLOCK,
-  DEMO_AHT10
+  DEMO_AHT10,
+  DEMO_CLOCK_TEMP
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_ARC_ANALOG_CLOCK;
+static const DemoMode DEMO_MODE = DEMO_CLOCK_TEMP;
+
+static const char* WIFI_SSID = "YOUR_SSID";
+static const char* WIFI_PASS = "YOUR_PASSWORD";
+static const long GMT_OFFSET_SEC = 9 * 3600 + 1800;  // +9.5h
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -247,6 +254,53 @@ static void runAHT10Demo() {
   canvas.pushSprite(0, 0);
 }
 
+static void runClockTemp() {
+  sensors_event_t humidity, temp;
+  aht.getEvent(&humidity, &temp);
+
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    canvas.fillScreen(TFT_BLACK);
+    canvas.setTextColor(TFT_RED, TFT_BLACK);
+    canvas.setTextDatum(MC_DATUM);
+    canvas.drawString("Time error", CENTER, CENTER);
+    canvas.pushSprite(0, 0);
+    return;
+  }
+
+  int s = timeinfo.tm_sec;
+  int m = timeinfo.tm_min;
+  int h24 = timeinfo.tm_hour;
+  int h = h24 % 12;
+
+  canvas.fillScreen(TFT_BLACK);
+
+  float secAngle = s * 6 - 90;
+  float minAngle = m * 6 + s * 0.1f - 90;
+  float hourAngle = h * 30 + m * 0.5f - 90;
+
+  int thickness = 10;
+  int r = RADIUS - 10;
+
+  canvas.fillArc(CENTER, CENTER, r, r - thickness, -90, hourAngle, TFT_BLUE);
+  canvas.fillArc(CENTER, CENTER, r - thickness - 5, r - 2 * thickness - 5, -90,
+                 minAngle, TFT_GREEN);
+  canvas.fillArc(CENTER, CENTER, r - 2 * thickness - 10, r - 3 * thickness - 10,
+                 -90, secAngle, TFT_RED);
+
+  char buf[32];
+  sprintf(buf, "%02d:%02d:%02d", h24, m, s);
+  canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+  canvas.setTextDatum(MC_DATUM);
+  canvas.drawString(buf, CENTER, CENTER - 10);
+
+  snprintf(buf, sizeof(buf), "%.1fC %.0f%%", temp.temperature,
+           humidity.relative_humidity);
+  canvas.drawString(buf, CENTER, CENTER + 15);
+
+  canvas.pushSprite(0, 0);
+}
+
 
 static void drawClippingTest() {
   tft.fillScreen(TFT_BLACK);
@@ -286,6 +340,14 @@ void setup() {
   } else {
     Serial.println("AHT10 initialized");
   }
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print('.');
+  }
+  Serial.println(" connected");
+  configTime(GMT_OFFSET_SEC, 0, "pool.ntp.org");
   canvas.setColorDepth(16);
   canvas.setPsram(true);
   if (!canvas.createSprite(240, 240)) {
@@ -328,6 +390,9 @@ void loop() {
       break;
     case DEMO_AHT10:
       runAHT10Demo();
+      break;
+    case DEMO_CLOCK_TEMP:
+      runClockTemp();
       break;
   }
 }

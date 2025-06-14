@@ -39,6 +39,7 @@ After a short clipping test the firmware will run one of several demos:
 - **Plasma** – a colourful swirling plasma effect.
 - **Hybrid clock** – arc clock outer rings with an analogue dial in the centre.
 - **AHT10 sensor** – displays the current temperature and humidity.
+- **Clock with temperature** – syncs time over WiFi and shows sensor readings.
 
 Edit the `DEMO_MODE` constant in `src/main.cpp` to choose which demo is
 displayed.
