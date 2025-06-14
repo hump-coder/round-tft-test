@@ -10,15 +10,15 @@ class LGFX : public lgfx::LGFX_Device {
 public:
   LGFX(void) {
     auto cfg = _bus.config();
-    cfg.spi_host = VSPI_HOST;
+    cfg.spi_host = SPI2_HOST;  // use general purpose SPI2 bus
     cfg.spi_mode = 0;
     cfg.freq_write = 40000000; // 40MHz SPI write
     cfg.freq_read  = 16000000;
     cfg.dma_channel = 1;       // use DMA channel 1
-    cfg.pin_sclk = 18;         // SCL
-    cfg.pin_mosi = 23;         // SDA/MOSI
+    cfg.pin_sclk = 7;          // SCK
+    cfg.pin_mosi = 11;         // MOSI
     cfg.pin_miso = -1;         // not used
-    cfg.pin_dc   = 16;         // D/C
+    cfg.pin_dc   = 6;          // D/C
     _bus.config(cfg);
     _panel.setBus(&_bus);
 
@@ -28,12 +28,12 @@ public:
     p_cfg.panel_height = 240;
     p_cfg.offset_x = 0;
     p_cfg.offset_y = 0;
-    p_cfg.pin_cs   = 5;
-    p_cfg.pin_rst  = 17;
+    p_cfg.pin_cs   = 12;       // chip select
+    p_cfg.pin_rst  = 13;       // reset
     _panel.config(p_cfg);
 
     auto l_cfg = _light.config();
-    l_cfg.pin_bl = 21;         // backlight pin
+    l_cfg.pin_bl = 5;          // backlight pin
     l_cfg.invert = false;
     l_cfg.freq   = 44100;
     l_cfg.pwm_channel = 7;
