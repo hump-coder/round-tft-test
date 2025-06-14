@@ -28,7 +28,9 @@ After a short clipping test the firmware will run one of several demos:
 
 - **Star field** – the original 3D star animation.
 - **Clock** – a simple analogue watch face.
+- **Arc clock** – digital time with progress arcs.
 - **Plasma** – a colourful swirling plasma effect.
+- **Hybrid clock** – arc clock outer rings with an analogue dial in the centre.
 
 Edit the `DEMO_MODE` constant in `src/main.cpp` to choose which demo is
 displayed.

@@ -51,11 +51,12 @@ enum DemoMode {
   DEMO_STARFIELD,
   DEMO_CLOCK,
   DEMO_PLASMA,
-  DEMO_ARC_CLOCK
+  DEMO_ARC_CLOCK,
+  DEMO_ARC_ANALOG_CLOCK
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_ARC_CLOCK;
+static const DemoMode DEMO_MODE = DEMO_ARC_ANALOG_CLOCK;
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -72,6 +73,7 @@ static Star stars[NUM_STARS];
 static const float STAR_SPEED = 0.6f;
 static const int CENTER = 120;
 static const int RADIUS = 120;
+static const int ANALOG_RADIUS = 65;
 
 static void resetStar(Star &s) {
   s.x = random(-RADIUS, RADIUS);
@@ -163,6 +165,42 @@ static void runArcClock() {
   canvas.setTextColor(TFT_WHITE, TFT_BLACK);
   canvas.setTextDatum(MC_DATUM);
   canvas.drawString(buf, CENTER, CENTER);
+  canvas.pushSprite(0, 0);
+}
+
+static void runArcAnalogClock() {
+  canvas.fillScreen(TFT_BLACK);
+
+  uint32_t seconds = millis() / 1000;
+  int s = seconds % 60;
+  int m = (seconds / 60) % 60;
+  int h = (seconds / 3600) % 12;
+
+  float secAngle = s * 6 - 90;
+  float minAngle = m * 6 + s * 0.1f - 90;
+  float hourAngle = h * 30 + m * 0.5f - 90;
+
+  int thickness = 10;
+  int r = RADIUS - 10;
+
+  canvas.fillArc(CENTER, CENTER, r, r - thickness, -90, hourAngle, TFT_BLUE);
+  canvas.fillArc(CENTER, CENTER, r - thickness - 5, r - 2 * thickness - 5, -90, minAngle, TFT_GREEN);
+  canvas.fillArc(CENTER, CENTER, r - 2 * thickness - 10, r - 3 * thickness - 10, -90, secAngle, TFT_RED);
+
+  canvas.drawCircle(CENTER, CENTER, ANALOG_RADIUS, TFT_WHITE);
+  for (int i = 0; i < 12; ++i) {
+    float a = i * 30 * DEG_TO_RAD;
+    int x1 = CENTER + (int)((ANALOG_RADIUS - 5) * sinf(a));
+    int y1 = CENTER - (int)((ANALOG_RADIUS - 5) * cosf(a));
+    int x2 = CENTER + (int)((ANALOG_RADIUS - 1) * sinf(a));
+    int y2 = CENTER - (int)((ANALOG_RADIUS - 1) * cosf(a));
+    canvas.drawLine(x1, y1, x2, y2, TFT_WHITE);
+  }
+
+  drawHand(h * 30 + m * 0.5f, ANALOG_RADIUS - 25, TFT_WHITE);
+  drawHand(m * 6 + s * 0.1f, ANALOG_RADIUS - 15, TFT_WHITE);
+  drawHand(s * 6, ANALOG_RADIUS - 10, TFT_RED);
+  canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
   canvas.pushSprite(0, 0);
 }
 
@@ -258,6 +296,9 @@ void loop() {
       break;
     case DEMO_ARC_CLOCK:
       runArcClock();
+      break;
+    case DEMO_ARC_ANALOG_CLOCK:
+      runArcAnalogClock();
       break;
   }
 }
