@@ -5,6 +5,7 @@
 #include <Adafruit_AHTX0.h>
 #include <WiFi.h>
 #include <time.h>
+#include "config.h"
 
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_GC9A01 _panel;  // display driver class
@@ -64,8 +65,8 @@ enum DemoMode {
 // Change this constant to pick which demo runs
 static const DemoMode DEMO_MODE = DEMO_CLOCK_TEMP;
 
-static const char* WIFI_SSID = "house";
-static const char* WIFI_PASS = "Can I please play?";
+static const char* WIFI_SSID =  CONFIG_WIFI_SSID;
+static const char* WIFI_PASS = CONFIG_WIFI_PASS;
 static const long GMT_OFFSET_SEC = 9 * 3600 + 1800;  // +9.5h
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
