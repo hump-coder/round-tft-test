@@ -188,10 +188,15 @@ void setup() {
   tft.setBrightness(200);
   Serial.println("Brightness set (if supported)");
   canvas.setColorDepth(16);
-  canvas.createSprite(240, 240);
+  if (!canvas.createSprite(240, 240)) {
+    Serial.println("Failed to allocate sprite buffer");
+  }
+  canvas.setSwapBytes(true);
+  canvas.fillScreen(TFT_BLACK);
 
   drawClippingTest();
   Serial.println("Clipping test displayed");
+  tft.clearClipRect();
   delay(3000);  // view clipping test for 3 seconds
   if (DEMO_MODE == DEMO_STARFIELD) {
     initStars();
