@@ -23,5 +23,11 @@ firmware run:
 pio run
 ```
 
-The display will show a clipping test for a few seconds and then animate a
-simple star field.
+After a short clipping test the firmware will run one of several demos:
+
+- **Star field** – the original 3D star animation.
+- **Clock** – a simple analogue watch face.
+- **Plasma** – a colourful swirling plasma effect.
+
+Edit the `DEMO_MODE` constant in `src/main.cpp` to choose which demo is
+displayed.
