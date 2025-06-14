@@ -447,6 +447,15 @@ static void runTempArcClock() {
                  -90, arcAngle, tColor);
 
   int r = RADIUS - thickness - 4;
+
+  char timebuf[6];
+  sprintf(timebuf, "%02d:%02d", timeinfo.tm_hour, m);
+  int scale = 3;
+  int textWidth = measureSevenSegString(timebuf, scale);
+  int timeY = (CENTER - r + r / 2);
+  int timeX = CENTER - textWidth / 2;
+  drawSevenSegString(timeX, timeY, timebuf, scale, TFT_BLUE);
+
   canvas.drawCircle(CENTER, CENTER, r, TFT_WHITE);
   for (int i = 0; i < 12; ++i) {
     float a = i * 30 * DEG_TO_RAD;
@@ -462,14 +471,7 @@ static void runTempArcClock() {
   drawHand(s * 6, r - 10, TFT_RED);
   canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
 
-  char timebuf[6];
-  sprintf(timebuf, "%02d:%02d", timeinfo.tm_hour, m);
-  int scale = 3;
-  int textWidth = measureSevenSegString(timebuf, scale);
-  int timeY = (CENTER - r + r / 2) + 10;
-  int timeX = CENTER - textWidth / 2;
-  drawSevenSegString(timeX, timeY, timebuf, scale, TFT_BLUE);
-
+  
   char buf[16];
   canvas.setTextDatum(MC_DATUM);
   canvas.setTextColor(tColor, TFT_BLACK);
