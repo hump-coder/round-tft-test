@@ -53,7 +53,7 @@ enum DemoMode {
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_STARFIELD;
+static const DemoMode DEMO_MODE = DEMO_PLASMA;
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -83,7 +83,28 @@ static void initStars() {
   }
 }
 
-
+static void runStarfield() {
+  tft.fillScreen(TFT_BLACK);
+  tft.startWrite();
+  for (int i = 0; i < NUM_STARS; ++i) {
+    Star &s = stars[i];
+    s.z -= STAR_SPEED;
+    if (s.z <= 1) {
+      resetStar(s);
+      continue;
+    }
+    int sx = CENTER + (int)(s.x / s.z * CENTER);
+    int sy = CENTER + (int)(s.y / s.z * CENTER);
+    if (sx >= 0 && sx < 240 && sy >= 0 && sy < 240) {
+      int dx = sx - CENTER;
+      int dy = sy - CENTER;
+      if (dx * dx + dy * dy <= RADIUS * RADIUS) {
+        tft.drawPixel(sx, sy, TFT_WHITE);
+      }
+    }
+  }
+  tft.endWrite();
+}
 
 static void drawHand(float angleDeg, int length, uint16_t color) {
   float rad = angleDeg * DEG_TO_RAD;
@@ -135,19 +156,6 @@ static void runPlasma() {
   }
 }
 
-static void runStarfield() {
-  switch (DEMO_MODE) {
-    case DEMO_STARFIELD:
-      runStarfield();
-      break;
-    case DEMO_CLOCK:
-      runClock();
-      break;
-    case DEMO_PLASMA:
-      runPlasma();
-      break;
-  }
-}
 
 static void drawClippingTest() {
   tft.fillScreen(TFT_BLACK);
