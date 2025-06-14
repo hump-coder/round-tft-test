@@ -288,15 +288,34 @@ static void runClockTemp() {
   canvas.fillArc(CENTER, CENTER, r - 2 * thickness - 10, r - 3 * thickness - 10,
                  -90, secAngle, TFT_RED);
 
-  char buf[32];
-  sprintf(buf, "%02d:%02d:%02d", h24, m, s);
-  canvas.setTextColor(TFT_WHITE, TFT_BLACK);
-  canvas.setTextDatum(MC_DATUM);
-  canvas.drawString(buf, CENTER, CENTER - 10);
+  canvas.drawCircle(CENTER, CENTER, ANALOG_RADIUS, TFT_WHITE);
+  for (int i = 0; i < 12; ++i) {
+    float a = i * 30 * DEG_TO_RAD;
+    int x1 = CENTER + (int)((ANALOG_RADIUS - 5) * sinf(a));
+    int y1 = CENTER - (int)((ANALOG_RADIUS - 5) * cosf(a));
+    int x2 = CENTER + (int)((ANALOG_RADIUS - 1) * sinf(a));
+    int y2 = CENTER - (int)((ANALOG_RADIUS - 1) * cosf(a));
+    canvas.drawLine(x1, y1, x2, y2, TFT_WHITE);
+  }
 
-  snprintf(buf, sizeof(buf), "%.1fC %.0f%%", temp.temperature,
-           humidity.relative_humidity);
-  canvas.drawString(buf, CENTER, CENTER + 15);
+  drawHand(h * 30 + m * 0.5f, ANALOG_RADIUS - 25, TFT_WHITE);
+  drawHand(m * 6 + s * 0.1f, ANALOG_RADIUS - 15, TFT_WHITE);
+  drawHand(s * 6, ANALOG_RADIUS - 10, TFT_RED);
+  canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+
+  char buf[32];
+  canvas.setTextDatum(MC_DATUM);
+  canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+  sprintf(buf, "%02d:%02d", h24, m);
+  canvas.drawString(buf, CENTER, CENTER - ANALOG_RADIUS - 20);
+
+  canvas.setTextColor(TFT_YELLOW, TFT_BLACK);
+  canvas.setTextSize(2);
+  snprintf(buf, sizeof(buf), "%.1fC", temp.temperature);
+  canvas.drawString(buf, CENTER, CENTER + ANALOG_RADIUS + 10);
+  snprintf(buf, sizeof(buf), "%.0f%%", humidity.relative_humidity);
+  canvas.drawString(buf, CENTER, CENTER + ANALOG_RADIUS + 40);
+  canvas.setTextSize(1);
 
   canvas.pushSprite(0, 0);
 }
