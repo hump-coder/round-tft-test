@@ -64,8 +64,8 @@ enum DemoMode {
 // Change this constant to pick which demo runs
 static const DemoMode DEMO_MODE = DEMO_CLOCK_TEMP;
 
-static const char* WIFI_SSID = "YOUR_SSID";
-static const char* WIFI_PASS = "YOUR_PASSWORD";
+static const char* WIFI_SSID = "house";
+static const char* WIFI_PASS = "Can I please play?";
 static const long GMT_OFFSET_SEC = 9 * 3600 + 1800;  // +9.5h
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
