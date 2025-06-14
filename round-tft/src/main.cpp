@@ -54,7 +54,7 @@ enum DemoMode {
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_PLASMA;
+static const DemoMode DEMO_MODE = DEMO_CLOCK;
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -181,6 +181,13 @@ static void drawClippingTest() {
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting setup...");
+
+  Serial.printf("Total heap: %d\n", ESP.getHeapSize());
+  Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
+  Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
+
+
   tft.begin();
   Serial.println("Display initialized");
   tft.setRotation(0);
@@ -188,6 +195,7 @@ void setup() {
   tft.setBrightness(200);
   Serial.println("Brightness set (if supported)");
   canvas.setColorDepth(16);
+  canvas.setPsram(true);
   if (!canvas.createSprite(240, 240)) {
     Serial.println("Failed to allocate sprite buffer");
   }
