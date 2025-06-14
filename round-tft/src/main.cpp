@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LovyanGFX.hpp>
+#include <math.h>
 
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_GC9A01 _panel;  // display driver class
@@ -45,6 +46,19 @@ public:
 
 LGFX tft;  // create display object
 
+enum DemoMode {
+  DEMO_STARFIELD,
+  DEMO_CLOCK,
+  DEMO_PLASMA
+};
+
+// Change this constant to pick which demo runs
+static const DemoMode DEMO_MODE = DEMO_STARFIELD;
+
+static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
+  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
+
 struct Star {
   float x;
   float y;
@@ -66,6 +80,70 @@ static void resetStar(Star &s) {
 static void initStars() {
   for (int i = 0; i < NUM_STARS; ++i) {
     resetStar(stars[i]);
+  }
+}
+
+static void runStarfield() {
+  switch (DEMO_MODE) {
+    case DEMO_STARFIELD:
+      runStarfield();
+      break;
+    case DEMO_CLOCK:
+      runClock();
+      break;
+    case DEMO_PLASMA:
+      runPlasma();
+      break;
+  }
+}
+
+static void drawHand(float angleDeg, int length, uint16_t color) {
+  float rad = angleDeg * DEG_TO_RAD;
+  int x = CENTER + (int)(sinf(rad) * length);
+  int y = CENTER - (int)(cosf(rad) * length);
+  tft.drawLine(CENTER, CENTER, x, y, color);
+}
+
+static void runClock() {
+  tft.fillScreen(TFT_BLACK);
+  tft.drawCircle(CENTER, CENTER, RADIUS - 1, TFT_WHITE);
+  for (int i = 0; i < 12; ++i) {
+    float a = i * 30 * DEG_TO_RAD;
+    int x1 = CENTER + (int)((RADIUS - 10) * sinf(a));
+    int y1 = CENTER - (int)((RADIUS - 10) * cosf(a));
+    int x2 = CENTER + (int)((RADIUS - 2) * sinf(a));
+    int y2 = CENTER - (int)((RADIUS - 2) * cosf(a));
+    tft.drawLine(x1, y1, x2, y2, TFT_WHITE);
+  }
+
+  uint32_t seconds = millis() / 1000;
+  int s = seconds % 60;
+  int m = (seconds / 60) % 60;
+  int h = (seconds / 3600) % 12;
+
+  drawHand(h * 30 + m * 0.5f, RADIUS - 50, TFT_WHITE);
+  drawHand(m * 6 + s * 0.1f, RADIUS - 30, TFT_WHITE);
+  drawHand(s * 6, RADIUS - 20, TFT_RED);
+  tft.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+}
+
+static void runPlasma() {
+  static float t = 0.0f;
+  t += 0.05f;
+  for (int y = 0; y < 240; ++y) {
+    for (int x = 0; x < 240; ++x) {
+      int dx = x - CENTER;
+      int dy = y - CENTER;
+      if (dx * dx + dy * dy <= RADIUS * RADIUS) {
+        float v = sinf(dx * 0.05f + t) + sinf(dy * 0.05f + t) + sinf((dx + dy) * 0.05f + t);
+        uint8_t r = sinf(v + t) * 127 + 128;
+        uint8_t g = sinf(v + t + 2.1f) * 127 + 128;
+        uint8_t b = sinf(v + t + 4.2f) * 127 + 128;
+        tft.drawPixel(x, y, color565(r, g, b));
+      } else {
+        tft.drawPixel(x, y, TFT_BLACK);
+      }
+    }
   }
 }
 
@@ -98,8 +176,10 @@ void setup() {
   drawClippingTest();
   Serial.println("Clipping test displayed");
   delay(3000);  // view clipping test for 3 seconds
-  initStars();
-  Serial.println("Stars initialized");
+  if (DEMO_MODE == DEMO_STARFIELD) {
+    initStars();
+    Serial.println("Stars initialized");
+  }
 }
 
 void loop() {
@@ -108,24 +188,15 @@ void loop() {
     Serial.println("Loop running");
     lastPrint = millis();
   }
-  tft.fillScreen(TFT_BLACK);
-  tft.startWrite();
-  for (int i = 0; i < NUM_STARS; ++i) {
-    Star &s = stars[i];
-    s.z -= STAR_SPEED;
-    if (s.z <= 1) {
-      resetStar(s);
-      continue;
-    }
-    int sx = CENTER + (int)(s.x / s.z * CENTER);
-    int sy = CENTER + (int)(s.y / s.z * CENTER);
-    if (sx >= 0 && sx < 240 && sy >= 0 && sy < 240) {
-      int dx = sx - CENTER;
-      int dy = sy - CENTER;
-      if (dx * dx + dy * dy <= RADIUS * RADIUS) {
-        tft.drawPixel(sx, sy, TFT_WHITE);
-      }
-    }
+  switch (DEMO_MODE) {
+    case DEMO_STARFIELD:
+      runStarfield();
+      break;
+    case DEMO_CLOCK:
+      runClock();
+      break;
+    case DEMO_PLASMA:
+      runPlasma();
+      break;
   }
-  tft.endWrite();
 }
