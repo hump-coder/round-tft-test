@@ -87,16 +87,27 @@ static void drawClippingTest() {
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Starting setup...");
   tft.begin();
+  Serial.println("Display initialized");
   tft.setRotation(0);
+  Serial.println("Rotation set");
   tft.setBrightness(200);
+  Serial.println("Brightness set (if supported)");
 
   drawClippingTest();
+  Serial.println("Clipping test displayed");
   delay(3000);  // view clipping test for 3 seconds
   initStars();
+  Serial.println("Stars initialized");
 }
 
 void loop() {
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 1000) {
+    Serial.println("Loop running");
+    lastPrint = millis();
+  }
   tft.fillScreen(TFT_BLACK);
   tft.startWrite();
   for (int i = 0; i < NUM_STARS; ++i) {
