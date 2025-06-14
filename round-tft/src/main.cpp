@@ -59,11 +59,12 @@ enum DemoMode {
   DEMO_ARC_CLOCK,
   DEMO_ARC_ANALOG_CLOCK,
   DEMO_AHT10,
-  DEMO_CLOCK_TEMP
+  DEMO_CLOCK_TEMP,
+  DEMO_TEMP_ARC_CLOCK
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_CLOCK_TEMP;
+static const DemoMode DEMO_MODE = DEMO_TEMP_ARC_CLOCK;
 
 static const char* WIFI_SSID =  CONFIG_WIFI_SSID;
 static const char* WIFI_PASS = CONFIG_WIFI_PASS;
@@ -321,6 +322,80 @@ static void runClockTemp() {
   canvas.pushSprite(0, 0);
 }
 
+static const float TEMP_MIN_C = -5.0f;
+static const float TEMP_MAX_C = 50.0f;
+
+static uint16_t temperatureColor(float temp) {
+  float ratio = (temp - TEMP_MIN_C) / (TEMP_MAX_C - TEMP_MIN_C);
+  if (ratio < 0.0f) ratio = 0.0f;
+  if (ratio > 1.0f) ratio = 1.0f;
+  struct RGB { uint8_t r, g, b; };
+  const RGB stops[] = {{0,0,255}, {0,255,0}, {255,165,0}, {255,0,0}};
+  const float pos[] = {0.0f, 0.5f, 0.8f, 1.0f};
+  int idx = 0;
+  while (idx < 3 && ratio > pos[idx+1]) idx++;
+  float local = (ratio - pos[idx]) / (pos[idx+1] - pos[idx]);
+  uint8_t r = stops[idx].r + (stops[idx+1].r - stops[idx].r) * local;
+  uint8_t g = stops[idx].g + (stops[idx+1].g - stops[idx].g) * local;
+  uint8_t b = stops[idx].b + (stops[idx+1].b - stops[idx].b) * local;
+  return color565(r, g, b);
+}
+
+static void runTempArcClock() {
+  sensors_event_t humidity, temp;
+  aht.getEvent(&humidity, &temp);
+
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    canvas.fillScreen(TFT_BLACK);
+    canvas.setTextColor(TFT_RED, TFT_BLACK);
+    canvas.setTextDatum(MC_DATUM);
+    canvas.drawString("Time error", CENTER, CENTER);
+    canvas.pushSprite(0, 0);
+    return;
+  }
+
+  int s = timeinfo.tm_sec;
+  int m = timeinfo.tm_min;
+  int h = timeinfo.tm_hour % 12;
+
+  canvas.fillScreen(TFT_BLACK);
+
+  float ratio = (temp.temperature - TEMP_MIN_C) / (TEMP_MAX_C - TEMP_MIN_C);
+  if (ratio < 0.0f) ratio = 0.0f;
+  if (ratio > 1.0f) ratio = 1.0f;
+  float arcAngle = ratio * 360.0f - 90.0f;
+  uint16_t tColor = temperatureColor(temp.temperature);
+  int thickness = 8;
+  canvas.fillArc(CENTER, CENTER, RADIUS - 1, RADIUS - 1 - thickness,
+                 -90, arcAngle, tColor);
+
+  int r = RADIUS - thickness - 4;
+  canvas.drawCircle(CENTER, CENTER, r, TFT_WHITE);
+  for (int i = 0; i < 12; ++i) {
+    float a = i * 30 * DEG_TO_RAD;
+    int x1 = CENTER + (int)((r - 10) * sinf(a));
+    int y1 = CENTER - (int)((r - 10) * cosf(a));
+    int x2 = CENTER + (int)((r - 2) * sinf(a));
+    int y2 = CENTER - (int)((r - 2) * cosf(a));
+    canvas.drawLine(x1, y1, x2, y2, TFT_WHITE);
+  }
+
+  drawHand(h * 30 + m * 0.5f, r - 40, TFT_WHITE);
+  drawHand(m * 6 + s * 0.1f, r - 20, TFT_WHITE);
+  drawHand(s * 6, r - 10, TFT_RED);
+  canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+
+  char buf[16];
+  canvas.setTextDatum(MC_DATUM);
+  canvas.setTextColor(tColor, TFT_BLACK);
+  snprintf(buf, sizeof(buf), "%.1fC", temp.temperature);
+  int y = CENTER - r + r / 3;
+  canvas.drawString(buf, CENTER, y);
+
+  canvas.pushSprite(0, 0);
+}
+
 
 static void drawClippingTest() {
   tft.fillScreen(TFT_BLACK);
@@ -413,6 +488,9 @@ void loop() {
       break;
     case DEMO_CLOCK_TEMP:
       runClockTemp();
+      break;
+    case DEMO_TEMP_ARC_CLOCK:
+      runTempArcClock();
       break;
   }
 }
