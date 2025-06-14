@@ -389,9 +389,11 @@ static void runTempArcClock() {
   char buf[16];
   canvas.setTextDatum(MC_DATUM);
   canvas.setTextColor(tColor, TFT_BLACK);
+  canvas.setTextSize(2);
   snprintf(buf, sizeof(buf), "%.1fC", temp.temperature);
-  int y = CENTER - r + r / 3;
+  int y = CENTER - r + r / 2;
   canvas.drawString(buf, CENTER, y);
+  canvas.setTextSize(1);
 
   canvas.pushSprite(0, 0);
 }
