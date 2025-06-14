@@ -83,19 +83,7 @@ static void initStars() {
   }
 }
 
-static void runStarfield() {
-  switch (DEMO_MODE) {
-    case DEMO_STARFIELD:
-      runStarfield();
-      break;
-    case DEMO_CLOCK:
-      runClock();
-      break;
-    case DEMO_PLASMA:
-      runPlasma();
-      break;
-  }
-}
+
 
 static void drawHand(float angleDeg, int length, uint16_t color) {
   float rad = angleDeg * DEG_TO_RAD;
@@ -144,6 +132,20 @@ static void runPlasma() {
         tft.drawPixel(x, y, TFT_BLACK);
       }
     }
+  }
+}
+
+static void runStarfield() {
+  switch (DEMO_MODE) {
+    case DEMO_STARFIELD:
+      runStarfield();
+      break;
+    case DEMO_CLOCK:
+      runClock();
+      break;
+    case DEMO_PLASMA:
+      runPlasma();
+      break;
   }
 }
 
