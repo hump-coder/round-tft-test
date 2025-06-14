@@ -50,11 +50,12 @@ LGFX_Sprite canvas(&tft);  // off-screen buffer to reduce flicker
 enum DemoMode {
   DEMO_STARFIELD,
   DEMO_CLOCK,
-  DEMO_PLASMA
+  DEMO_PLASMA,
+  DEMO_ARC_CLOCK
 };
 
 // Change this constant to pick which demo runs
-static const DemoMode DEMO_MODE = DEMO_CLOCK;
+static const DemoMode DEMO_MODE = DEMO_ARC_CLOCK;
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -135,6 +136,33 @@ static void runClock() {
   drawHand(m * 6 + s * 0.1f, RADIUS - 30, TFT_WHITE);
   drawHand(s * 6, RADIUS - 20, TFT_RED);
   canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+  canvas.pushSprite(0, 0);
+}
+
+static void runArcClock() {
+  canvas.fillScreen(TFT_BLACK);
+
+  uint32_t seconds = millis() / 1000;
+  int s = seconds % 60;
+  int m = (seconds / 60) % 60;
+  int h = (seconds / 3600) % 12;
+
+  float secAngle = s * 6 - 90;
+  float minAngle = m * 6 + s * 0.1f - 90;
+  float hourAngle = h * 30 + m * 0.5f - 90;
+
+  int thickness = 10;
+  int r = RADIUS - 10;
+
+  canvas.fillArc(CENTER, CENTER, r, r - thickness, -90, hourAngle, TFT_BLUE);
+  canvas.fillArc(CENTER, CENTER, r - thickness - 5, r - 2 * thickness - 5, -90, minAngle, TFT_GREEN);
+  canvas.fillArc(CENTER, CENTER, r - 2 * thickness - 10, r - 3 * thickness - 10, -90, secAngle, TFT_RED);
+
+  char buf[9];
+  sprintf(buf, "%02d:%02d:%02d", h == 0 ? 12 : h, m, s);
+  canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+  canvas.setTextDatum(MC_DATUM);
+  canvas.drawString(buf, CENTER, CENTER);
   canvas.pushSprite(0, 0);
 }
 
@@ -227,6 +255,9 @@ void loop() {
       break;
     case DEMO_PLASMA:
       runPlasma();
+      break;
+    case DEMO_ARC_CLOCK:
+      runArcClock();
       break;
   }
 }
