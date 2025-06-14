@@ -43,3 +43,5 @@ After a short clipping test the firmware will run one of several demos:
 
 Edit the `DEMO_MODE` constant in `src/main.cpp` to choose which demo is
 displayed.
+Set `DRAW_OFF_SEGMENTS` in `src/main.cpp` to draw inactive 7-segment segments
+with a dim color.
