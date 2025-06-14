@@ -1,6 +1,8 @@
 #ifndef LOCAL_CONFIG_H
 #define LOCAL_CONFIG_H
 
+#include "config_private.h"
+
 // Pin assignments for the Wemos LOLIN S2 mini board
 //SCL   GPIO7  - grey
 //SDA   GPIO11 - purple
@@ -13,7 +15,6 @@
 
 
 
-#define CONFIG_WIFI_SSID "house";
-#define CONFIG_WIFI_PASS "Can I please play?";
+
 
 #endif
