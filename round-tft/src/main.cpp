@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <LovyanGFX.hpp>
 #include <math.h>
+#include <Wire.h>
+#include <Adafruit_AHTX0.h>
 
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_GC9A01 _panel;  // display driver class
@@ -52,7 +54,8 @@ enum DemoMode {
   DEMO_CLOCK,
   DEMO_PLASMA,
   DEMO_ARC_CLOCK,
-  DEMO_ARC_ANALOG_CLOCK
+  DEMO_ARC_ANALOG_CLOCK,
+  DEMO_AHT10
 };
 
 // Change this constant to pick which demo runs
@@ -74,6 +77,9 @@ static const float STAR_SPEED = 0.6f;
 static const int CENTER = 120;
 static const int RADIUS = 120;
 static const int ANALOG_RADIUS = 65;
+static const int AHT_SDA = 8;
+static const int AHT_SCL = 9;
+Adafruit_AHTX0 aht;
 
 static void resetStar(Star &s) {
   s.x = random(-RADIUS, RADIUS);
@@ -227,6 +233,20 @@ static void runPlasma() {
   canvas.pushSprite(0, 0);
 }
 
+static void runAHT10Demo() {
+  sensors_event_t humidity, temp;
+  aht.getEvent(&humidity, &temp);
+  canvas.fillScreen(TFT_BLACK);
+  canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+  canvas.setTextDatum(MC_DATUM);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "Temp: %.1f C", temp.temperature);
+  canvas.drawString(buf, CENTER, CENTER - 10);
+  snprintf(buf, sizeof(buf), "Humidity: %.1f%%", humidity.relative_humidity);
+  canvas.drawString(buf, CENTER, CENTER + 10);
+  canvas.pushSprite(0, 0);
+}
+
 
 static void drawClippingTest() {
   tft.fillScreen(TFT_BLACK);
@@ -260,6 +280,12 @@ void setup() {
   Serial.println("Rotation set");
   tft.setBrightness(200);
   Serial.println("Brightness set (if supported)");
+  Wire.begin(AHT_SDA, AHT_SCL);
+  if (!aht.begin(&Wire)) {
+    Serial.println("AHT10 not found");
+  } else {
+    Serial.println("AHT10 initialized");
+  }
   canvas.setColorDepth(16);
   canvas.setPsram(true);
   if (!canvas.createSprite(240, 240)) {
@@ -299,6 +325,9 @@ void loop() {
       break;
     case DEMO_ARC_ANALOG_CLOCK:
       runArcAnalogClock();
+      break;
+    case DEMO_AHT10:
+      runAHT10Demo();
       break;
   }
 }

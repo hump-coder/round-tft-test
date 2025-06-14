@@ -15,6 +15,13 @@ Connect the display to the S2 mini using the general purpose **SPI2** bus for be
 | `RST`       | `GPIO13`  |
 | `BL` (backlight, if available) | `GPIO5`  |
 
+Connect an **AHT10** temperature/humidity sensor using I2C:
+
+| Sensor Pin | ESP32 Pin |
+|------------|-----------|
+| `SDA`      | `GPIO8`   |
+| `SCL`      | `GPIO9`   |
+
 ## Building
 
 This project uses [PlatformIO](https://platformio.org/). To build the
@@ -31,6 +38,7 @@ After a short clipping test the firmware will run one of several demos:
 - **Arc clock** – digital time with progress arcs.
 - **Plasma** – a colourful swirling plasma effect.
 - **Hybrid clock** – arc clock outer rings with an analogue dial in the centre.
+- **AHT10 sensor** – displays the current temperature and humidity.
 
 Edit the `DEMO_MODE` constant in `src/main.cpp` to choose which demo is
 displayed.
