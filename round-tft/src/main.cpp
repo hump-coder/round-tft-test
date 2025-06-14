@@ -368,18 +368,49 @@ static const uint8_t DIGIT_SEGMENTS[10] = {
   0x6F  // 9
 };
 
+static const bool DRAW_OFF_SEGMENTS = false;  // set to true to dim inactive segments
+static const uint16_t OFF_SEGMENT_COLOR = color565(20, 20, 20);
+
 static int drawSevenSegDigit(int x, int y, int digit, int scale, uint16_t color) {
   int t = scale * 2;
   int h = scale * 8;
   int w = scale * 6;
   uint8_t seg = DIGIT_SEGMENTS[digit];
-  if (seg & 0x01) canvas.fillRect(x + t, y, w, t, color);                 // A
-  if (seg & 0x02) canvas.fillRect(x + w + t, y + t, t, h, color);         // B
-  if (seg & 0x04) canvas.fillRect(x + w + t, y + t + h + t, t, h, color); // C
-  if (seg & 0x08) canvas.fillRect(x + t, y + 2 * h + 2 * t, w, t, color); // D
-  if (seg & 0x10) canvas.fillRect(x, y + t + h + t, t, h, color);         // E
-  if (seg & 0x20) canvas.fillRect(x, y + t, t, h, color);                 // F
-  if (seg & 0x40) canvas.fillRect(x + t, y + h + t, w, t, color);         // G
+  if (seg & 0x01) {
+    canvas.fillRect(x + t, y, w, t, color);                 // A
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x + t, y, w, t, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x02) {
+    canvas.fillRect(x + w + t, y + t, t, h, color);         // B
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x + w + t, y + t, t, h, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x04) {
+    canvas.fillRect(x + w + t, y + t + h + t, t, h, color); // C
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x + w + t, y + t + h + t, t, h, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x08) {
+    canvas.fillRect(x + t, y + 2 * h + 2 * t, w, t, color); // D
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x + t, y + 2 * h + 2 * t, w, t, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x10) {
+    canvas.fillRect(x, y + t + h + t, t, h, color);         // E
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x, y + t + h + t, t, h, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x20) {
+    canvas.fillRect(x, y + t, t, h, color);                 // F
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x, y + t, t, h, OFF_SEGMENT_COLOR);
+  }
+  if (seg & 0x40) {
+    canvas.fillRect(x + t, y + h + t, w, t, color);         // G
+  } else if (DRAW_OFF_SEGMENTS) {
+    canvas.fillRect(x + t, y + h + t, w, t, OFF_SEGMENT_COLOR);
+  }
   return sevenSegDigitWidth(scale);
 }
 
