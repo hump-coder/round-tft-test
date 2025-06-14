@@ -5,3 +5,5 @@
 //DC    GPIO6  - blue
 //RST   GPIO13 - yellow
 //BL (backlight, if available) GPIO5
+//AHT10 SDA GPIO8
+//AHT10 SCL GPIO9
