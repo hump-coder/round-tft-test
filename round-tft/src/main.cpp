@@ -341,6 +341,82 @@ static uint16_t temperatureColor(float temp) {
   return color565(r, g, b);
 }
 
+// 7-segment style digit rendering ------------------------------
+
+static int sevenSegDigitWidth(int scale) {
+  int t = scale * 2;
+  int w = scale * 6;
+  return w + 2 * t;
+}
+
+static int sevenSegDigitHeight(int scale) {
+  int t = scale * 2;
+  int h = scale * 8;
+  return 2 * h + 3 * t;
+}
+
+static const uint8_t DIGIT_SEGMENTS[10] = {
+  0x3F, // 0
+  0x06, // 1
+  0x5B, // 2
+  0x4F, // 3
+  0x66, // 4
+  0x6D, // 5
+  0x7D, // 6
+  0x07, // 7
+  0x7F, // 8
+  0x6F  // 9
+};
+
+static int drawSevenSegDigit(int x, int y, int digit, int scale, uint16_t color) {
+  int t = scale * 2;
+  int h = scale * 8;
+  int w = scale * 6;
+  uint8_t seg = DIGIT_SEGMENTS[digit];
+  if (seg & 0x01) canvas.fillRect(x + t, y, w, t, color);                 // A
+  if (seg & 0x02) canvas.fillRect(x + w + t, y + t, t, h, color);         // B
+  if (seg & 0x04) canvas.fillRect(x + w + t, y + t + h + t, t, h, color); // C
+  if (seg & 0x08) canvas.fillRect(x + t, y + 2 * h + 2 * t, w, t, color); // D
+  if (seg & 0x10) canvas.fillRect(x, y + t + h + t, t, h, color);         // E
+  if (seg & 0x20) canvas.fillRect(x, y + t, t, h, color);                 // F
+  if (seg & 0x40) canvas.fillRect(x + t, y + h + t, w, t, color);         // G
+  return sevenSegDigitWidth(scale);
+}
+
+static int drawColonSeg(int x, int y, int scale, uint16_t color) {
+  int t = scale * 2;
+  int h = scale * 8;
+  canvas.fillCircle(x + t / 2, y + h / 2 + t, t / 2 + 1, color);
+  canvas.fillCircle(x + t / 2, y + h + t + h / 2 + t, t / 2 + 1, color);
+  return t;
+}
+
+static int measureSevenSegString(const char *s, int scale) {
+  int width = 0;
+  int digitW = sevenSegDigitWidth(scale);
+  int colonW = scale * 2;
+  while (*s) {
+    width += (*s == ':') ? colonW : digitW;
+    if (*(s + 1)) width += scale;
+    ++s;
+  }
+  return width;
+}
+
+static void drawSevenSegString(int x, int y, const char *s, int scale,
+                               uint16_t color) {
+  int digitW = sevenSegDigitWidth(scale);
+  int colonW = scale * 2;
+  while (*s) {
+    if (*s == ':') {
+      x += drawColonSeg(x, y, scale, color) + scale;
+    } else {
+      x += drawSevenSegDigit(x, y, *s - '0', scale, color) + scale;
+    }
+    ++s;
+  }
+}
+
 static void runTempArcClock() {
   sensors_event_t humidity, temp;
   aht.getEvent(&humidity, &temp);
@@ -386,12 +462,20 @@ static void runTempArcClock() {
   drawHand(s * 6, r - 10, TFT_RED);
   canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
 
+  char timebuf[6];
+  sprintf(timebuf, "%02d:%02d", timeinfo.tm_hour, m);
+  int scale = 3;
+  int textWidth = measureSevenSegString(timebuf, scale);
+  int timeY = (CENTER - r + r / 2) + 10;
+  int timeX = CENTER - textWidth / 2;
+  drawSevenSegString(timeX, timeY, timebuf, scale, TFT_BLUE);
+
   char buf[16];
   canvas.setTextDatum(MC_DATUM);
   canvas.setTextColor(tColor, TFT_BLACK);
   canvas.setTextSize(3);
   snprintf(buf, sizeof(buf), "%.1fC", temp.temperature);
-  int y = (CENTER - r + r / 2) + 10; // kARL added the +10 to lower the text a bit.
+  int y = (CENTER + r - r / 2) - 10;
   canvas.drawString(buf, CENTER, y);
   canvas.setTextSize(1);
 
