@@ -45,6 +45,7 @@ public:
 };
 
 LGFX tft;  // create display object
+LGFX_Sprite canvas(&tft);  // off-screen buffer to reduce flicker
 
 enum DemoMode {
   DEMO_STARFIELD,
@@ -110,19 +111,19 @@ static void drawHand(float angleDeg, int length, uint16_t color) {
   float rad = angleDeg * DEG_TO_RAD;
   int x = CENTER + (int)(sinf(rad) * length);
   int y = CENTER - (int)(cosf(rad) * length);
-  tft.drawLine(CENTER, CENTER, x, y, color);
+  canvas.drawLine(CENTER, CENTER, x, y, color);
 }
 
 static void runClock() {
-  tft.fillScreen(TFT_BLACK);
-  tft.drawCircle(CENTER, CENTER, RADIUS - 1, TFT_WHITE);
+  canvas.fillScreen(TFT_BLACK);
+  canvas.drawCircle(CENTER, CENTER, RADIUS - 1, TFT_WHITE);
   for (int i = 0; i < 12; ++i) {
     float a = i * 30 * DEG_TO_RAD;
     int x1 = CENTER + (int)((RADIUS - 10) * sinf(a));
     int y1 = CENTER - (int)((RADIUS - 10) * cosf(a));
     int x2 = CENTER + (int)((RADIUS - 2) * sinf(a));
     int y2 = CENTER - (int)((RADIUS - 2) * cosf(a));
-    tft.drawLine(x1, y1, x2, y2, TFT_WHITE);
+    canvas.drawLine(x1, y1, x2, y2, TFT_WHITE);
   }
 
   uint32_t seconds = millis() / 1000;
@@ -133,12 +134,14 @@ static void runClock() {
   drawHand(h * 30 + m * 0.5f, RADIUS - 50, TFT_WHITE);
   drawHand(m * 6 + s * 0.1f, RADIUS - 30, TFT_WHITE);
   drawHand(s * 6, RADIUS - 20, TFT_RED);
-  tft.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+  canvas.fillCircle(CENTER, CENTER, 3, TFT_WHITE);
+  canvas.pushSprite(0, 0);
 }
 
 static void runPlasma() {
   static float t = 0.0f;
   t += 0.05f;
+  canvas.startWrite();
   for (int y = 0; y < 240; ++y) {
     for (int x = 0; x < 240; ++x) {
       int dx = x - CENTER;
@@ -148,12 +151,14 @@ static void runPlasma() {
         uint8_t r = sinf(v + t) * 127 + 128;
         uint8_t g = sinf(v + t + 2.1f) * 127 + 128;
         uint8_t b = sinf(v + t + 4.2f) * 127 + 128;
-        tft.drawPixel(x, y, color565(r, g, b));
+        canvas.drawPixel(x, y, color565(r, g, b));
       } else {
-        tft.drawPixel(x, y, TFT_BLACK);
+        canvas.drawPixel(x, y, TFT_BLACK);
       }
     }
   }
+  canvas.endWrite();
+  canvas.pushSprite(0, 0);
 }
 
 
@@ -182,6 +187,8 @@ void setup() {
   Serial.println("Rotation set");
   tft.setBrightness(200);
   Serial.println("Brightness set (if supported)");
+  canvas.setColorDepth(16);
+  canvas.createSprite(240, 240);
 
   drawClippingTest();
   Serial.println("Clipping test displayed");
